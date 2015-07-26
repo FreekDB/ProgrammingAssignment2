@@ -14,10 +14,33 @@ of an R object.
 
 ### Example: Caching the Mean of a Vector
 
-In this example we introduce the `<<-` operator which can be used to
+In this example, we introduce the `<<-` operator which can be used to
 assign a value to an object in an environment that is different from the
-current environment. Below are two functions that are used to create a
-special object that stores a numeric vector and caches its mean.
+current environment.
+
+First we show how the vector cache functionallity can be implemented by
+a single function:
+
+    makeVectorWithMean <- function(vector = numeric()) {
+        cachedMean <- NULL
+        setVector <- function(newVector) {
+            vector <<- newVector
+            cachedMean <<- NULL
+        }
+        getVector <- function() vector
+        getMean <- function(...) {
+            if (is.null(cachedMean))
+                cachedMean <<- mean(vector, ...)
+            else
+                message("getting mean from cache")
+            cachedMean
+        }
+        list(setVector = setVector, getVector = getVector, getMean = getMean)
+    }
+
+
+Below are two functions that are used to create a special object that
+stores a numeric vector and caches its mean.
 
 The first function, `makeVector` creates a special "vector", which is
 really a list containing a function to
@@ -43,6 +66,7 @@ really a list containing a function to
                  getmean = getmean)
     }
 
+
 The following function calculates the mean of the special "vector"
 created with the above function. However, it first checks to see if the
 mean has already been calculated. If so, it `get`s the mean from the
@@ -51,16 +75,16 @@ the data and sets the value of the mean in the cache via the `setmean`
 function.
 
     cachemean <- function(x, ...) {
-            m <- x$getmean()
-            if(!is.null(m)) {
-                    message("getting cached data")
-                    return(m)
-            }
+        m <- x$getmean()
+        if (is.null(m)) {
             data <- x$get()
             m <- mean(data, ...)
             x$setmean(m)
-            m
+        } else
+            message("getting cached data")
+        m
     }
+
 
 ### Assignment: Caching the Inverse of a Matrix
 
